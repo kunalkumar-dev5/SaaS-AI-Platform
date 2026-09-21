@@ -25,15 +25,30 @@ export async function POST(req: Request) {
             return new NextResponse("Messages are required", { status: 400 });
         }
 
+        if (!Array.isArray(messages)) {
+            return new NextResponse("Messages must be an array", { status: 400 });
+        }
+
         const response = await openai.chat.completions.create({
-            model: "gpt-3.5-turbo",
+            model: process.env.OPENAI_MODEL || "gpt-4o-mini",
             messages,
         });
 
         return NextResponse.json(response.choices[0].message);
 
     } catch (error) {
-        console.log("[CONVERSATION_ERROR]", error);
-        return new NextResponse("Internal Error", { status: 500 });
+        console.error("[CONVERSATION_ERROR]", error);
+
+        const status = typeof error === "object" && error !== null && "status" in error
+            ? Number(error.status)
+            : 500;
+        const message = error instanceof Error
+            ? error.message
+            : "Conversation request failed";
+
+        return NextResponse.json(
+            { error: message },
+            { status: status >= 400 && status < 600 ? status : 500 }
+        );
     }
 }

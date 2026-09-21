@@ -2,12 +2,9 @@
 
 import axios from "axios";
 import *as z from "zod";
-import { Code } from "lucide-react";
+import { Music } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { cn } from "@/lib/utils";
-import ReactMarkdown from "react-markdown";
-
 import { Heading } from "@/components/heading";
 import { Loader } from "@/components/loader";
 import { Input } from "@/components/ui/input";
@@ -23,13 +20,10 @@ import {
 import { formSchema } from "./constants";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { ChatCompletionMessageParam } from "openai/resources/chat/completions";
-import { UserAvatar } from "@/components/user-avatar";
-import { BotAvatar } from "@/components/bot-avatar";
-const CodePage = () => {
+const MusicPage = () => {
 
     const router = useRouter();
-    const [messages, setMessages] = useState<ChatCompletionMessageParam[]>([]);
+    const [music, setMusic] = useState<string>();
     const [errorMessage, setErrorMessage] = useState<string>();
 
     const form = useForm<z.infer<typeof formSchema>>({
@@ -41,41 +35,18 @@ const CodePage = () => {
 
     const isLoading = form.formState.isSubmitting;
 
-    const getMessageContent = (content: ChatCompletionMessageParam["content"]) => {
-        if (typeof content === "string") {
-            return content;
-        }
-
-        if (Array.isArray(content)) {
-            return content
-                .map((part) => ("text" in part && typeof part.text === "string" ? part.text : ""))
-                .join("");
-        }
-
-        return "";
-    };
-
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         try {
+            setMusic(undefined);
             setErrorMessage(undefined);
-            const userMessage: ChatCompletionMessageParam = {
-                role: "user",
-                content: values.prompt,
-            };
-            const newMessages = [...messages, userMessage];
-
-            const response = await axios.post("/api/code", {
-                messages: newMessages,
-            });
-
-            setMessages((current) => [...current, userMessage, response.data]);
-
+            const response = await axios.post("/api/music", values);
+            setMusic(response.data.audio);
             form.reset();
         } catch (error) {
             const message = axios.isAxiosError(error)
                 ? error.response?.data?.error
                 : undefined;
-            setErrorMessage(message || "Code generation failed. Please try again.");
+            setErrorMessage(message || "Music generation failed. Please try again.");
         } finally {
             router.refresh();
         }
@@ -84,11 +55,11 @@ const CodePage = () => {
     return (
         <div>
             <Heading
-                title="Code Generation"
-                description="Generate code using descriptive text"
-                icon={Code}
-                iconColor="text-green-700"
-                bgcolor="bg-green-700/10"
+                title="Music Generation"
+                description="Turn your prompt into music."
+                icon={Music}
+                iconColor="text-emerald-500"
+                bgcolor="bg-emerald-500/10"
             />
             <div className="px-4 lg:px-8">
                 <div>
@@ -117,7 +88,7 @@ const CodePage = () => {
                                             <Input
                                                 className="border-0 outline-none focus-visible:ring-0 focus-visible:ring-transparent"
                                                 disabled={isLoading}
-                                                placeholder="Simple toggle button using react hook form"
+                                                placeholder="Piano solo"
                                                 {...field}
                                             />
                                         </FormControl>
@@ -141,43 +112,19 @@ const CodePage = () => {
                             {errorMessage}
                         </div>
                     )}
-                    {messages.length === 0 && !isLoading && (
+                    {!music && !isLoading && (
 
-                        <Empty label="No conversation started." />
+                        <Empty label="No music generated." />
                     )}
-                    <div className="flex flex-col-reverse gap-y-4">
-                        {messages.map((message, index) => (
-                            <div
-                                key={`${message.role}-${index}`} className={cn(
-                                    "p-8 w-full flex items-center gap-x-8 rounded-lg",
-                                    message.role === "user" ? "bg-white border border-black/10" : "bg-muted"
-                                )}
-                            >
-                                {message.role === "user" ? <UserAvatar /> : <BotAvatar />}
-
-                                <div className="text-sm overflow-hidden leading-7">
-                                    <ReactMarkdown
-                                        components={{
-                                            pre: ({ ...props }) => (
-                                                <div className="overflow-auto w-full my-2 bg-black/10 p-2 rounded-lg">
-                                                    <pre {...props} />
-                                                </div>
-                                            ),
-                                            code: ({ ...props }) => (
-                                                <code className="bg-black/10 rounded-lg p-1" {...props} />
-                                            )
-                                        }}
-                                    >
-                                        {getMessageContent(message.content || "")}
-                                    </ReactMarkdown>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                    {music && (
+                        <audio controls className="w-full mt-8">
+                            <source src={music} />
+                        </audio>
+                    )}
                 </div>
             </div>
-        </div >
+        </div>
     );
 }
 
-export default CodePage;
+export default MusicPage;

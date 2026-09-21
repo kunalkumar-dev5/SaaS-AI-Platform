@@ -35,6 +35,7 @@ const ImagePage = () => {
 
     const router = useRouter();
     const [images, setImages] = useState<string[]>([]);
+    const [errorMessage, setErrorMessage] = useState<string>();
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -50,14 +51,17 @@ const ImagePage = () => {
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         try {
             setImages([]);
+            setErrorMessage(undefined);
 
             const response = await axios.post("/api/image", values);
             const urls = response.data.map((image: { url: string }) => image.url);
             setImages(urls);
             form.reset();
         } catch (error) {
-            // TOOO: Open Pro Modal
-            console.log(error);
+            const message = axios.isAxiosError(error)
+                ? error.response?.data?.error
+                : undefined;
+            setErrorMessage(message || "Image generation failed. Please try again.");
         } finally {
             router.refresh();
         }
@@ -176,6 +180,11 @@ const ImagePage = () => {
                     {isLoading && (
                         <div className="p-20">
                             <Loader />
+                        </div>
+                    )}
+                    {errorMessage && !isLoading && (
+                        <div className="p-4 rounded-lg w-full text-sm text-red-600 bg-red-50">
+                            {errorMessage}
                         </div>
                     )}
                     {images.length === 0 && !isLoading && (

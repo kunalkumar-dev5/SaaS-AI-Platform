@@ -11,6 +11,7 @@ export const Empty = ({ label }: EmptyProps) => {
                 <Image
                     alt="Empty"
                     fill
+                    sizes="288px"
                     src="/empty.png"
                 />
             </div>

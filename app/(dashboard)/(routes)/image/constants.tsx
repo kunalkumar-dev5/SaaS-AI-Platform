@@ -15,7 +15,7 @@ export const amountOptions = [
     },
     {
         value: "2",
-        label: "3 Photo",
+        label: "2 Photo",
     },
     {
         value: "3",
@@ -25,10 +25,6 @@ export const amountOptions = [
         value: "4",
         label: "4 Photo",
     },
-    {
-        value: "5",
-        label: "5 Photo",
-    }
 ];
 
 export const resolutionOptionns=[

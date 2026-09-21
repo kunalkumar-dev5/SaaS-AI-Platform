@@ -76,6 +76,7 @@ const Sidebar = () => {
                         <Image
                             fill
                             alt="Logo"
+                            sizes="32px"
                             src="/logo.png"
                         />
                     </div>

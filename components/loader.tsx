@@ -8,6 +8,7 @@ export const Loader = () => {
                 <Image
                     alt="logo"
                     fill
+                    sizes="40px"
                     src="/logo.png"
                 />
             </div>

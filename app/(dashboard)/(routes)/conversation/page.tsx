@@ -29,6 +29,7 @@ const ConversationPage = () => {
 
     const router = useRouter();
     const [messages, setMessages] = useState<ChatCompletionMessageParam[]>([]);
+    const [errorMessage, setErrorMessage] = useState<string>();
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -55,6 +56,7 @@ const ConversationPage = () => {
 
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         try {
+            setErrorMessage(undefined);
             const userMessage: ChatCompletionMessageParam = {
                 role: "user",
                 content: values.prompt,
@@ -69,8 +71,10 @@ const ConversationPage = () => {
 
             form.reset();
         } catch (error) {
-                // TOOO: Open Pro Modal
-            console.log(error);
+            const message = axios.isAxiosError(error)
+                ? error.response?.data?.error
+                : undefined;
+            setErrorMessage(message || "Conversation request failed. Please try again.");
         } finally {
             router.refresh();
         }
@@ -129,6 +133,11 @@ const ConversationPage = () => {
                         {isLoading && (
                             <div className="p-8 rounded-lg w-full flex items-center justify-center bg-muted">
                                 <Loader/>
+                            </div>
+                        )}
+                        {errorMessage && !isLoading && (
+                            <div className="p-4 rounded-lg w-full text-sm text-red-600 bg-red-50">
+                                {errorMessage}
                             </div>
                         )}
                         {messages.length === 0 && !isLoading && (
